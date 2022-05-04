@@ -82,6 +82,7 @@ class HighlightCodeBlockWidget extends api.NoteContextAwareWidget {
         log("constructor");
         super(...args);
         this.markerCounter = 0;
+        this.balloonEditorCreate = null;
     }
 
     get position() { 
@@ -114,6 +115,8 @@ class HighlightCodeBlockWidget extends api.NoteContextAwareWidget {
     }
 
     initTextEditor(textEditor) {
+        log("initTextEditor");
+
         let widget = this;
         const document = textEditor.model.document;
 
@@ -153,6 +156,7 @@ class HighlightCodeBlockWidget extends api.NoteContextAwareWidget {
         //     it's not clear if CKEditor5 has apis to attach and detach
         //     documents around
         document.registerPostFixer(function(writer) {
+            log("postFixer");
             // Postfixers are a simpler way of tracking changes than onchange
             // See
             // https://github.com/ckeditor/ckeditor5/blob/b53d2a4b49679b072f4ae781ac094e7e831cfb14/packages/ckeditor5-block-quote/src/blockquoteediting.js#L54
@@ -195,6 +199,14 @@ class HighlightCodeBlockWidget extends api.NoteContextAwareWidget {
             // postfixers to run again
             return false;
         });
+
+        // This assumes the document is empty and a explicit call to highlight
+        // is not necessary here. Empty documents have a single children of type
+        // paragraph with no text
+        assert((document.getRoot().childCount == 1) && 
+            (document.getRoot().getChild(0).name == "paragraph") &&
+             document.getRoot().getChild(0).isEmpty);
+        
     }
 
     /**
@@ -226,11 +238,19 @@ class HighlightCodeBlockWidget extends api.NoteContextAwareWidget {
      *                           note-detail-editable-text component < textEditor
      */
     async wrapBalloonEditorCreate() {
-        let widget = this;
-        let fn = async function(...args) {
+        log("wrapBalloonEditorCreate");
+
+        assert(!this.balloonEditorCreate, "BalloonEditor.create already wrapped!!!");
+        
+        await glob.requireLibrary({"js": ["libraries/ckeditor/ckeditor.js"]});
+        this.balloonEditorCreate = BalloonEditor.create.bind(BalloonEditor);
+
+        const widget = this;
+        BalloonEditor.create = async function(...args) {
             log("Calling wrapped create" + args);
-            let textEditor = await fn.origFn(...args);
-            log("wrapped textEditor " + textEditor.id.slice(0, 8) + " document " + document);
+            let textEditor = await widget.balloonEditorCreate(...args);
+            log("wrapped textEditor " + textEditor.id.slice(0, 8) + " document " + 
+                textEditor.model.document);
 
             // XXX This could limit to note text editors by hooking on eg
             //     removePlugins = "CodeBlock", which is used in the attribute
@@ -240,12 +260,6 @@ class HighlightCodeBlockWidget extends api.NoteContextAwareWidget {
             //     https://github.com/zadam/trilium/blob/dbd312c88db2b000ec0ce18c95bc8a27c0e621a1/src/public/app/widgets/type_widgets/editable_text.js
             widget.initTextEditor(textEditor);
             return textEditor;
-        }
-        await glob.requireLibrary({"js": ["libraries/ckeditor/ckeditor.js"]});
-        if (!BalloonEditor.create.origFn) {
-            log("Wrapping BalloonEditor.create");
-            fn.origFn = BalloonEditor.create.bind(BalloonEditor);
-            BalloonEditor.create = fn;
         }
     }
 
@@ -259,7 +273,7 @@ class HighlightCodeBlockWidget extends api.NoteContextAwareWidget {
      *     way to remove that formatting when editing back the note.
      */
     highlightCodeBlock(codeBlock, writer) {
-        dbg("highlighting codeblock " + JSON.stringify(codeBlock.toJSON()));
+        log("highlighting codeblock " + JSON.stringify(codeBlock.toJSON()));
         const model = codeBlock.root.document.model;
     
         // Can't invoke addMarker with an already existing marker name,
@@ -453,7 +467,7 @@ class HighlightCodeBlockWidget extends api.NoteContextAwareWidget {
 }
 // XXX This doesn't need any widget functionality, use #frontendStartup instead
 //     of #widget?
-info("Starting");
+info(`Creating SyntaxHighlightWidget debugLevel:${debugLevel}`);
 let widget = new HighlightCodeBlockWidget()
 await widget.wrapBalloonEditorCreate();
 module.exports = widget;
