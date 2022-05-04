@@ -3,20 +3,18 @@
 Syntax highlight [Trilium](https://github.com/zadam/trilium/) widget for editable note codeblocks using [highlight.js](https://github.com/highlightjs/highlight.js)
 
 ## Features
-- Live syntax highlighting of any codeblock inside a text note using automatic language detection.
+- Live syntax highlighting of any codeblock inside a text note using automatic language detection, unless plaintext is selected.
 - The highlighting is not saved as formatting with the note, but just view-time markers like that highlighting that happens when you do searching.
 
 ## Installation
 - Create a code note of type JS Frontend with the contents of [SyntaxHighlightWidget.js](SyntaxHighlightWidget.js) and the label #widget
 - Attach the [highlight.min.js](https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js) file to that note
-- Set the code note #debug attribute to enable debug output
-- set #highlightCodeBlock attribute to the notes you want to enable codeblock highlighting (this is temporary while the widget is in development, will be removed in future versions)
+- To enable debug output, set the code note #debugLevel attribute to one of error, warn, info, log, debug (default is info)
 
 ## Todo 
-- Don't re-highlight unmodified codeblocks
-- Honor language attribute instead of using automatic?
-- Allow specifying the style sheet as code and/or text note attribute
-- Readonly note support
+- Honor language attribute when different from plaintext instead of using automatic?
+- Allow specifying the style sheet as code and/or text note attribute?
+- Readonly note support?
 
 ## Discussions
 
