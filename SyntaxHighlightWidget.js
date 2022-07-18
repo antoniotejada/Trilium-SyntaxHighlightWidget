@@ -83,6 +83,7 @@ class HighlightCodeBlockWidget extends api.NoteContextAwareWidget {
         super(...args);
         this.markerCounter = 0;
         this.balloonEditorCreate = null;
+        this.inComposition = false;
     }
 
     get position() { 
@@ -184,7 +185,8 @@ class HighlightCodeBlockWidget extends api.NoteContextAwareWidget {
                     log("removing codeBlock at path " + JSON.stringify(change.position.toJSON()));
                     
                 } else if (((change.type == "remove") || (change.type == "insert")) && 
-                            change.position.parent.is('element', 'codeBlock')) {
+                            change.position.parent.is('element', 'codeBlock') &&
+                           !widget.inComposition) {
                     // Text was added or removed from the codeblock, force a
                     // highlight
                     const codeBlock = change.position.parent;
@@ -198,6 +200,18 @@ class HighlightCodeBlockWidget extends api.NoteContextAwareWidget {
             // Adding markers doesn't modify the document data so no need for
             // postfixers to run again
             return false;
+        });
+
+        // Ignore events fired between 'compositionstart' and 'compositionend' since
+        // it will trigger expected highlight to temporary input
+        // See: https://github.com/facebook/react/issues/3926
+        textEditor.editing.view.document.on('compositionstart', () => {
+            dbg("compositionstart");
+            widget.inComposition = true;
+        });
+        textEditor.editing.view.document.on('compositionend', () => {
+            dbg("compositionend");
+            widget.inComposition = false;
         });
 
         // This assumes the document is empty and a explicit call to highlight
