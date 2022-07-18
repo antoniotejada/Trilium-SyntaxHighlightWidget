@@ -76,6 +76,16 @@ function debugbreak() {
     debugger;
 }
 
+let langClassMap = new Map();
+
+function makeLangClassMap() {
+    for (const lang of MIME_TYPES_DICT) {
+        let from = lang.mime.toLowerCase().replace(/[\W_]+/g,"-");
+        let to = lang.title.toLowerCase();
+        langClassMap.set(from, to);
+    }
+}
+
 
 class HighlightCodeBlockWidget extends api.NoteContextAwareWidget {
     constructor(...args) {
@@ -343,7 +353,14 @@ class HighlightCodeBlockWidget extends api.NoteContextAwareWidget {
         //     If that is done, it would also be interesting to have an
         //     auto-detect option. See language mime types at
         //     https://github.com/zadam/trilium/blob/dbd312c88db2b000ec0ce18c95bc8a27c0e621a1/src/public/app/widgets/type_widgets/editable_text.js#L104    
-        let highlightRes = hljs.highlightAuto(text);
+        let highlightRes;
+        let lang = codeBlock.getAttribute("language");
+        if (langClassMap.has(lang)) {
+            log("block lang: class = " + lang + ", lang = " + langClassMap.get(lang));
+            highlightRes = hljs.highlight(text, {language: langClassMap.get(lang)});
+        } else {
+            highlightRes = hljs.highlightAuto(text);
+        }
         dbg("text\n" + text);
         dbg("html\n" + highlightRes.value);
 
@@ -473,3 +490,136 @@ await widget.wrapBalloonEditorCreate();
 module.exports = widget;
 let hljs = highlightminjs;
 
+// Change title accroding to: https://github.com/highlightjs/highlight.js/blob/main/SUPPORTED_LANGUAGES.md
+const MIME_TYPES_DICT = [
+    { default: true, title: "plaintext", mime: "text/plain" },
+    { title: "Brainfuck", mime: "text/x-brainfuck" },
+    { default: true, title: "C", mime: "text/x-csrc" },
+    { default: true, title: "C++", mime: "text/x-c++src" },
+    { default: true, title: "csharp", mime: "text/x-csharp" },
+    { title: "Clojure", mime: "text/x-clojure" },
+    { title: "Clojure", mime: "text/x-clojurescript" },
+    { title: "CMake", mime: "text/x-cmake" },
+    { title: "CoffeeScript", mime: "text/coffeescript" },
+    { title: "Lisp", mime: "text/x-common-lisp" },
+    { title: "Cypher", mime: "application/x-cypher-query" },
+    { title: "Crystal", mime: "text/x-crystal" },
+    { default: true, title: "CSS", mime: "text/css" },
+    { title: "D", mime: "text/x-d" },
+    { title: "Dart", mime: "application/dart" },
+    { title: "diff", mime: "text/x-diff" },
+    { title: "Django", mime: "text/x-django" },
+    { title: "Dockerfile", mime: "text/x-dockerfile" },
+    { title: "Dylan", mime: "text/x-dylan" },
+    { title: "EBNF", mime: "text/x-ebnf" },
+    { title: "Elm", mime: "text/x-elm" },
+    { title: "Erlang", mime: "text/x-erlang" },
+    { title: "Fortran", mime: "text/x-fortran" },
+    { title: "fsharp", mime: "text/x-fsharp" },
+    { title: "Gherkin", mime: "text/x-feature" },
+    { title: "Markdown", mime: "text/x-gfm" },
+    { default: true, title: "Go", mime: "text/x-go" },
+    { default: true, title: "Groovy", mime: "text/x-groovy" },
+    { title: "HAML", mime: "text/x-haml" },
+    { default: true, title: "Haskell", mime: "text/x-haskell" },
+    { title: "Haskell", mime: "text/x-literate-haskell" },
+    { title: "Haxe", mime: "text/x-haxe" },
+    { default: true, title: "HTML", mime: "text/html" },
+    { default: true, title: "HTTP", mime: "message/http" },
+    { default: true, title: "Java", mime: "text/x-java" },
+    { title: "jsp", mime: "application/x-jsp" },
+    { default: true, title: 'javascript', mime: 'application/javascript;env=frontend' },
+    { default: true, title: 'javascript', mime: 'application/javascript;env=backend' },
+    { default: true, title: "JSON", mime: "application/json" },
+    { title: "JSX", mime: "text/jsx" },
+    { title: "Jinja2", mime: "text/jinja2" },
+    { title: "Julia", mime: "text/x-julia" },
+    { default: true, title: "Kotlin", mime: "text/x-kotlin" },
+    { title: "LESS", mime: "text/x-less" },
+    { title: "LiveScript", mime: "text/x-livescript" },
+    { title: "Lua", mime: "text/x-lua" },
+    { default: true, title: "Markdown", mime: "text/x-markdown" },
+    { title: "mIRC", mime: "text/mirc" },
+    { title: "SQL", mime: "text/x-mariadb" },
+    { title: "Mathematica", mime: "text/x-mathematica" },
+    { title: "Modelica", mime: "text/x-modelica" },
+    { title: "MUMPS", mime: "text/x-mumps" },
+    { title: "SQL", mime: "text/x-mssql" },
+    { title: "mbox", mime: "application/mbox" },
+    { title: "SQL", mime: "text/x-mysql" },
+    { title: "Nginx", mime: "text/x-nginx-conf" },
+    { title: "NSIS", mime: "text/x-nsis" },
+    { title: "NTriples", mime: "application/n-triples" },
+    { title: "objectivec", mime: "text/x-objectivec" },
+    { title: "OCaml", mime: "text/x-ocaml" },
+    { title: "Octave", mime: "text/x-octave" },
+    { title: "Oz", mime: "text/x-oz" },
+    { title: "Pascal", mime: "text/x-pascal" },
+    { default: true, title: "Perl", mime: "text/x-perl" },
+    { default: true, title: "PHP", mime: "text/x-php" },
+    { title: "Pig", mime: "text/x-pig" },
+    { title: "PLSQL", mime: "text/x-plsql" },
+    { title: "PostgreSQL", mime: "text/x-pgsql" },
+    { title: "PowerShell", mime: "application/x-powershell" },
+    { title: "Properties files", mime: "text/x-properties" },
+    { title: "ProtoBuf", mime: "text/x-protobuf" },
+    { default: true, title: "Python", mime: "text/x-python" },
+    { title: "Puppet", mime: "text/x-puppet" },
+    { title: "Q", mime: "text/x-q" },
+    { title: "R", mime: "text/x-rsrc" },
+    { title: "reStructuredText", mime: "text/x-rst" },
+    { title: "rpm-spec", mime: "text/x-rpm-spec" },
+    { default: true, title: "Ruby", mime: "text/x-ruby" },
+    { title: "Rust", mime: "text/x-rustsrc" },
+    { title: "SAS", mime: "text/x-sas" },
+    { title: "Sass", mime: "text/x-sass" },
+    { title: "Scala", mime: "text/x-scala" },
+    { title: "Scheme", mime: "text/x-scheme" },
+    { title: "SCSS", mime: "text/x-scss" },
+    { default: true, title: "bash", mime: "text/x-sh" },
+    { title: "Sieve", mime: "application/sieve" },
+    { title: "Slim", mime: "text/x-slim" },
+    { title: "Smalltalk", mime: "text/x-stsrc" },
+    { title: "Smarty", mime: "text/x-smarty" },
+    { title: "Solr", mime: "text/x-solr" },
+    { title: "SML", mime: "text/x-sml" },
+    { title: "Soy", mime: "text/x-soy" },
+    { title: "SPARQL", mime: "application/sparql-query" },
+    { title: "Spreadsheet", mime: "text/x-spreadsheet" },
+    { default: true, title: "SQL", mime: "text/x-sql" },
+    { title: "sql", mime: "text/x-sqlite" },
+    { default: true, title: "sql", mime: "text/x-sqlite;schema=trilium" },
+    { title: "Squirrel", mime: "text/x-squirrel" },
+    { title: "Stylus", mime: "text/x-styl" },
+    { default: true, title: "Swift", mime: "text/x-swift" },
+    { title: "sTeX", mime: "text/x-stex" },
+    { title: "LaTeX", mime: "text/x-latex" },
+    { title: "SystemVerilog", mime: "text/x-systemverilog" },
+    { title: "Tcl", mime: "text/x-tcl" },
+    { title: "Textile", mime: "text/x-textile" },
+    { title: "TiddlyWiki ", mime: "text/x-tiddlywiki" },
+    { title: "TOML", mime: "text/x-toml" },
+    { title: "Tornado", mime: "text/x-tornado" },
+    { title: "troff", mime: "text/troff" },
+    { title: "TTCN", mime: "text/x-ttcn" },
+    { title: "TTCN_CFG", mime: "text/x-ttcn-cfg" },
+    { title: "Turtle", mime: "text/turtle" },
+    { title: "TypeScript", mime: "application/typescript" },
+    { title: "TypeScript-JSX", mime: "text/typescript-jsx" },
+    { title: "Twig", mime: "text/x-twig" },
+    { title: "VB", mime: "text/x-vb" },
+    { title: "VBScript", mime: "text/vbscript" },
+    { title: "Velocity", mime: "text/velocity" },
+    { title: "Verilog", mime: "text/x-verilog" },
+    { title: "VHDL", mime: "text/x-vhdl" },
+    { default: true, title: "XML", mime: "text/xml" },
+    { title: "XQuery", mime: "application/xquery" },
+    { title: "Yacas", mime: "text/x-yacas" },
+    { default: true, title: "YAML", mime: "text/x-yaml" },
+    { title: "Z80", mime: "text/x-z80" },
+    { title: "mscgen", mime: "text/x-mscgen" },
+    { title: "xu", mime: "text/x-xu" },
+    { title: "msgenny", mime: "text/x-msgenny" }
+];
+
+makeLangClassMap();
